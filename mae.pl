@@ -116,8 +116,8 @@ if (defined($details)) {
     $details->{sdErrSigned} = sqrt($sumSqDiffErrSigned /  scalar(@$content1));
     $details->{sdErrAbs} = sqrt($sumSqDiffErrAbs /  scalar(@$content1));
     print "Data\tdata1\tdata2\n";
-    printf( "mean\t%06.3f\t%06.3f\n", $details->{mean1}, $details->{mean2});
-    printf( "sd\t%06.3f\t%06.3f\n\n", $details->{sd1}, $details->{sd2});
+    printf( "mean\t%08.5f\t%08.5f\n", $details->{mean1}, $details->{mean2});
+    printf( "sd\t%08.5f\t%08.5f\n\n", $details->{sd1}, $details->{sd2});
     my ($sd1, $sd2) = ($details->{sd1}, $details->{sd2});
     warn "Warning: stddev data 1 is zero! (file $param1)" if ($sd1==0);
     warn "Warning: stddev data 2 is zero! (file $param2)" if ($sd2==0);
@@ -136,8 +136,8 @@ if (defined($details)) {
 
 sub _printWithProps {
     my ($name, $val, $sd1, $sd2) = @_;
-    my $strSD1 = ($sd1 != 0) ? sprintf("%06.3f", $val/$sd1) : "  NA  ";
-    my $strSD2 = ($sd2 != 0) ? sprintf("%06.3f", $val/$sd2) : "  NA  ";
-    printf( "$name\t%06.3f\t$strSD1\t$strSD2\n", $val);
+    my $strSD1 = ($sd1 != 0) ? sprintf("%08.5f", $val/$sd1) : "  NA  ";
+    my $strSD2 = ($sd2 != 0) ? sprintf("%08.5f", $val/$sd2) : "  NA  ";
+    printf( "$name\t%08.5f\t$strSD1\t$strSD2\n", $val);
 }
  

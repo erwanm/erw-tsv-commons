@@ -13,7 +13,7 @@ sub usage {
 	$fh = *STDOUT if (!defined $fh);
 	print $fh "Usage: balance-dataset-values.pl [options] <file[:col]> <size>\n";
 	print $fh "  Reads a column of values in <file> (column <col>, default 1),\n";
-	print $fh "  and balances this set of values, i.e. return a pseudo-uniform\n"
+	print $fh "  and balances this set of values, i.e. return a pseudo-uniform\n";
 	print $fh "  (random) distribution using only these values. Since the set of\n";
 	print $fh "  values is actually discrete, the approximation consists in\n";
 	print $fh "  the closet value whenever needed.\n";
@@ -63,7 +63,7 @@ sub parseIntervalsStr {
     die "-i format error" if (scalar(@elements)==0);
     for (my $i=0;$i<scalar(@elements);$i++) {
 	my ($min,$max,$weight) =  split(":", $elements[$i]);
-	die "-i format error in '$elements[$i]'" if (!strlen($weight));
+	die "-i format error in '$elements[$i]'" if (!length($weight));
 	$maxRandom += $weight;
 	$mapRanges[0] = [ $maxRandom, $weight, $min, $max ];
     }
@@ -81,11 +81,12 @@ sub randomValueFromWeightedInterval {
     }
     die "Bug or error in -i option: reached the end of the possible intervals with random value $v" if ($i>=scalar(@$mapRanges));
     # mapping interval, not the fastest way but more explicit (to some extent...)
-    my $startRangeRandom = ($mapRanges->[$i]->[0]-$mapRanges->[$i]->[1]);
-    # remark: $sizeRangeRandom = $weight 
+    my $startRangeRandom = ($mapRanges->[$i]->[0] - $mapRanges->[$i]->[1]);
+    # remark: $sizeRangeRandom = weight  = $mapRanges->[$i]->[1]
     my $sizeRangeValues = $mapRanges->[$i]->[3]-$mapRanges->[$i]->[2];
     my $relativeV = $v - $startRangeRandom;
-    my $targetValue = $relativeV * $sizeRangeValues / $weight;
+    my $targetValue = $relativeV * $sizeRangeValues / $mapRanges->[$i]->[1] + $mapRanges->[$i]->[2];
+    #print STDERR "DEBUG: v=$v; startRangeRandom=$startRangeRandom; sizeRangeValues=$sizeRangeValues; relativeV=$relativeV; targetValue=$targetValue\n";
     return $targetValue;
 }
 
@@ -106,12 +107,12 @@ sub structUniq {
     my %map;
     my @range;
     for (my $i=0;$i<scalar(@$values);$i++) {
-	my $v = $values[$sortedIndexes[$i]];
+	my $v = $values->[$sortedIndexes->[$i]];
 	if (defined($map{$v})) {
-	    push(@{$map{$v}}, $sortedIndexes[$i]);
+	    push(@{$map{$v}}, $sortedIndexes->[$i]);
 	} else {
 	    push(@range, $v);
-	    $map{$v} = [ $sortedIndexes[$i] ] ;
+	    $map{$v} = [ $sortedIndexes->[$i] ] ;
 	}
     }
     return (\@range, \%map);
@@ -122,6 +123,7 @@ sub structUniq {
 sub findClosest {
     my $value = shift;
     my $uniqDiscreteRange = shift;
+    # print STDERR "find closest: $value\n";
     my $i=0;
     while (($i<scalar(@$uniqDiscreteRange)) && ($value > $uniqDiscreteRange->[$i])) {
 	$i++;
@@ -142,29 +144,35 @@ sub findClosest {
 my %opt;
 getopts('hi:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
 usage($STDOUT) && exit 0 if $opt{h};
-print STDERR "2 arguments expected but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if (scalar(@ARGV) != 2);
-my $intervalsStr=$op{i};
+# print STDERR "2 arguments expected but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if (scalar(@ARGV) != 2);
+my $intervalsStr=$opt{i};
 my $paramFile=shift;
 my $size=shift;
-my ($file, $col) = ($param =~ m/:/) ? ($param =~ m/^(.*):(.*)$/) : ( $param, 1);
+my ($file, $col) = ($paramFile =~ m/:/) ? ($paramFile =~ m/^(.*):(.*)$/) : ( $paramFile, 1);
 $col--;
 
 my $values = readColFile($file, $col);
-my $nb=scalar(@$values)-1;
-my @indexes = (0..$nb);
+my $nb=scalar(@$values);
+my @indexes = (0..($nb-1));
 my @sortedIndexes = sort { $values->[$a] <=> $values->[$b] } @indexes;
+# print STDERR "DEBUG values        = [ ".join("; ", @$values)." ]\n";
+# print STDERR "DEBUG sortedIndexes = [ ".join("; ", @sortedIndexes)." ]\n";
+# print STDERR "nb=$nb\n";
 my $minRange=$values->[$sortedIndexes[0]];
 my $maxRange=$values->[$sortedIndexes[$nb-1]] + $epsilon;
 $intervalsStr="$minRange:$maxRange:1" if (!defined($intervalsStr));
+# print STDERR "DEBUG intervalsStr=$intervalsStr\n";
 my ($randomMax, $mapWeights) = parseIntervalsStr($intervalsStr);
+# print STDERR "DEBUG randomMax=$randomMax; mapWeights->[0] = [ ".join("; ",@{$mapWeights->[0]})." ]\n";
 my ($uniqValues, $mapUniqValues) = structUniq($values, \@sortedIndexes);
+# print STDERR "uniqValues= [ ".join("; ", @$uniqValues)." ]\n";
 
 my @res;
 for (my $i=0;$i<$size;$i++) {
-    my $value = randomValueFromWeightedInterval($maxRandom, $mapWeights);
+    my $value = randomValueFromWeightedInterval($randomMax, $mapWeights);
     my $closest = findClosest($value, $uniqValues);
     my $index = pickOne($mapUniqValues->{$closest});
     push(@res, $index);
 }
 
-for my $index (sort { $a <=> $b } @res) { print "$index\n"; }
+for my $index (sort { $a <=> $b } @res) { print("".($index+1)."\n"); }
