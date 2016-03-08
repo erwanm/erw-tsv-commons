@@ -1,4 +1,3 @@
 # EM April 14
 #
-addToEnvVar "$(pwd)" "PATH" :
-erw-pm activate perl-libraries
+addToEnvVar "$(pwd)/bin" "PATH" :
