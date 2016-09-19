@@ -2,28 +2,36 @@
 
 use strict;
 use warnings;
+use Getopt::Std;
 use open qw(:std :utf8);
 
 my $separator = "\t";
 
-if (scalar(@ARGV) < 2) {
-	print STDERR "Usage: filter-column.pl [-n] <criterion file> <criterion col> [input column]\n";
-	print STDERR "       the main input data is read on STDIN. The output consists in rows from\n";
-	print STDERR "       this input data where the 'input column' satisfies the criterion. The\n";
-	print STDERR "       criterion is that data must belong to the column 'criterion col' from\n";
-	print STDERR "       file 'criterion file'.\n";
-	print STDERR "       If 'input column' is not provided then the whole line is considered, and\n";
-	print STDERR "       the condition is 'contains' instead of 'is equal to'.\n";
-	print STDERR "       If '-n' is supplied, then the opposite condition is used: lines which\n";
-	print STDERR "       do not belong to the criterion file are output.\n";
-	print STDERR "       Ouput written to STDOUT.\n";
-    exit 1;
+sub usage {
+	my $fh = shift;
+	$fh = *STDOUT if (!defined $fh);
+	print $fh "Usage: filter-column.pl [-hn] <criterion file> <criterion col> [input column]\n";
+	print $fh "       the main input data is read on STDIN. The output consists in rows from\n";
+	print $fh "       this input data where the 'input column' satisfies the criterion. The\n";
+	print $fh "       criterion is that data must belong to the column 'criterion col' from\n";
+	print $fh "       file 'criterion file'.\n";
+	print $fh "       If 'input column' is not provided then the whole line is considered, and\n";
+	print $fh "       the condition is 'contains' instead of 'is equal to'.\n";
+	print $fh "       If '-n' is supplied, then the opposite condition is used: lines which\n";
+	print $fh "       do not belong to the criterion file are output.\n";
+	print $fh "       Ouput written to STDOUT.\n";
+	print $fh "\n";
 }
-my $optNot=0;
-if ($ARGV[0] eq "-n") {
-    $optNot=1;
-  shift @ARGV;
-}
+
+
+# PARSING OPTIONS
+my %opt;
+getopts('hn', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
+usage($STDOUT) && exit 0 if $opt{h};
+print STDERR "at least 2 arguments expected but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if (scalar(@ARGV) < 2);
+
+my $optNot=defined($opt{n});
+
 my ($filename, $critCol, $inputCol) = @ARGV;
 $critCol--;
 $inputCol-- if defined($inputCol);

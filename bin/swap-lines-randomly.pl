@@ -1,24 +1,37 @@
 #!/usr/bin/perl
 
+# erwan 20/1/13, updated usage sept 16
+
 use strict;
 use warnings;
+use Getopt::Std;
 
-# erwan 20/1/13
+my $progName="swap-lines-randomly.pl";
 
-if (scalar(@ARGV) != 3) {
-    print STDERR "Usage: swap-lines-randomly.pl [-r] <M> <input start line> <input end line>\n";
-    print STDERR "  reads N lines from STDIN starting at line no <start> and ending at\n";
-    print STDERR "  line no <end> (inclusive, counting from 1), and randomly swaps M\n";
-    print STDERR "  pairs of lines randomly before writing the result to STDOUT.\n";
-    print STDERR "  -r: with replacement (default: no replacement).\n";
-    exit 1;
+sub usage {
+    my $fh = shift;
+    $fh = *STDOUT if (!defined $fh);
+    print $fh "Usage: $progName [-hr] <M> <input start line> <input end line>\n";
+    print $fh "\n";
+    print $fh "  reads N lines from STDIN starting at line no <start> and ending at\n";
+    print $fh "  line no <end> (inclusive, counting from 1), and randomly swaps M\n";
+    print $fh "  pairs of lines randomly before writing the result to STDOUT.\n";
+    print $fh "\n";
+    print $fh "  -r: with replacement (default: no replacement).\n";
+    print $fh "\n";
 }
 
-my $replacement=0;
-if ($ARGV[0] eq "-r") {
-    $replacement = 1;
-    shift @ARGV;
-}
+
+# PARSING OPTIONS
+my %opt;
+getopts('hr', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
+usage($STDOUT) && exit 0 if $opt{h};
+print STDERR "3 arguments expected but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if (scalar(@ARGV) != 3);
+
+
+
+my $replacement=defined($opt{r});
+
 my $nbSwaps = $ARGV[0];
 my $min=$ARGV[1];
 my $max=$ARGV[2];

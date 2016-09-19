@@ -2,19 +2,33 @@
 
 use strict;
 use warnings;
+use Getopt::Std;
 
-my $separator = "\t";
+my $separator="\t";
+my $progName="rank-with-ties.pl";
 
-if (scalar(@ARGV) < 1) {
-    print STDERR "Usage: rank-with-ties <value column no> [rev]\n";
-    print STDERR "  sorts the lines read from STDIN according to the value in\n";
-    print STDERR "  'value column', and writes the result to STDOUT with one \n";
-    print STDERR "  additional column containing the rank (taking ties into \n";
-    print STDERR "  account). By default starting from lowest values, except if\n";
-    print STDERR "  option 'rev' is supplied.\n";
-    exit 1;
+sub usage {
+    my $fh = shift;
+    $fh = *STDOUT if (!defined $fh);
+    print $fh "Usage: $progName [-hr] <value column no>\n";
+    print $fh "\n";
+    print $fh "  sorts the lines read from STDIN according to the value in\n";
+    print $fh "  'value column', and writes the result to STDOUT with one \n";
+    print $fh "  additional column containing the rank (taking ties into \n";
+    print $fh "  account). By default starting from lowest values, except if\n";
+    print $fh "  option '-r' is supplied.\n";
+    print $fh "\n";
 }
-my ($valueCol, $revOrder) = @ARGV;
+
+
+# PARSING OPTIONS
+my %opt;
+getopts('rh', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
+usage($STDOUT) && exit 0 if $opt{h};
+print STDERR "1 arguments expected but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if (scalar(@ARGV) != 1);
+
+my $revOrder = defined($opt{r});
+my ($valueCol) = @ARGV;
 $valueCol--;
 
 my @lines;

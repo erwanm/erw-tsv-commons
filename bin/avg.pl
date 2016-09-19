@@ -1,1 +1,0 @@
-../Text-TextAnalytics/util/avg.pl
