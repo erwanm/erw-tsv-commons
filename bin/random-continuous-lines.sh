@@ -45,6 +45,11 @@ fi
 nb="$1"
 file="$2"
 
+if [ ! -e "$file" ]; then
+    echo "Error: cannot open file '$file'" 1>&2
+    exit 1
+fi
+
 nbIn=$(cat "$file" | wc -l)
 max=$(( $nbIn - $nb ))
 
