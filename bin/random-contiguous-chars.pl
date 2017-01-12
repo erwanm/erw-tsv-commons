@@ -64,6 +64,7 @@ if ($total <= $nb) {
 	print "$x";
     }
 } else {
+    my $printed=0;
     my $start = int(rand($total - $nb));
     my $stop = $start + $nb;
     my $stage = 0;
@@ -72,11 +73,13 @@ if ($total <= $nb) {
 	my $x = $units[$i];
 	my $l = length($x);
 	if ($pos+ $l > $start) {
+#	    print STDERR ">start, pos=$pos, stage=$stage\n";
 	    if ($stage == 0) {
 		# print current?
 		my $end = $pos + $l;
 		if ($start - $pos < $end - $start) { # expected start closer to beginning
 		    print $x;
+		    $printed += $l;
 		}
 		$stage = 1; # printing from now on
 	    } elsif ($stage == 1) {
@@ -85,16 +88,20 @@ if ($total <= $nb) {
 		    # print current?
 		    if ($stop - $pos > $end - $stop) { # expected stop closer to end
 			print $x;
+			$printed += $l;
 		    }
 		    $stage = 2;# finished
 		} else {
 		    print $x;
+		    $printed += $l;
+
 		}
 	    }
 	}
 	
 	$pos += $l;
     }
+    print STDERR "$progName: Warning: could not find anything to print from position $start with length $nb\n" if ($printed==0);
     print "\n" if ($newLine);
     
 }
