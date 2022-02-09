@@ -41,10 +41,10 @@ open(FILE, "<:encoding(utf-8)","$filename") or die "can not open $filename";
 my $nb = 0;
 while (<FILE>) {
 	chomp;
-	my @columns = split;
+	my @columns = split('\t');
 #	print STDERR "DEBUG: $columns[0]\n$columns[1]\n$columns[2]\n$columns[3]\n\n";
 	my $data = $columns[$critCol];
-	if (!defined($critCol)) {
+	if (!defined($data)) {
 	    print STDERR "Error line ".($nb+1)." in criterion file: not enough columns.\n";
 	    exit(2); 
 	}
@@ -56,7 +56,7 @@ close(FILE);
 while (<STDIN>) {
 	chomp;
 	my $line = $_;
-	my @columns = split;
+	my @columns = split('\t');
         my $data;
 	if (defined($inputCol)) {
   	    my $data = $columns[$inputCol];
