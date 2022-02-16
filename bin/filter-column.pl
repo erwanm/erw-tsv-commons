@@ -15,31 +15,43 @@ sub usage {
 	print $fh "       this input data where the 'input column' satisfies the criterion. The\n";
 	print $fh "       criterion is that data must belong to the column 'criterion col' from\n";
 	print $fh "       file 'criterion file'.\n";
+	print $fh "       Ouput written to STDOUT.\n";
 	print $fh "       If 'input column' is not provided then the whole line is considered, and\n";
 	print $fh "       the condition is 'contains' instead of 'is equal to'.\n";
-	print $fh "       If '-n' is supplied, then the opposite condition is used: lines which\n";
-	print $fh "       do not belong to the criterion file are output.\n";
-	print $fh "       Ouput written to STDOUT.\n";
+	print $fh "\n";
+	print $fh "Options:\n";
+	print $fh "       -h help message\n";
+	print $fh "       -n the opposite condition is used: lines which do not belong to the criterion\n";
+	print $fh "          file are printed.\n";
+	print $fh "       -v use colon-separated values instead of <criterion file>. <criterion col>\n";
+	print $fh "          is ignored.\n";
 	print $fh "\n";
 }
 
 
 # PARSING OPTIONS
 my %opt;
-getopts('hn', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
+getopts('hnv', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
 usage($STDOUT) && exit 0 if $opt{h};
 print STDERR "at least 2 arguments expected but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if (scalar(@ARGV) < 2);
 
 my $optNot=defined($opt{n});
+my $optValues=defined($opt{v});
 
 my ($filename, $critCol, $inputCol) = @ARGV;
 $critCol--;
 $inputCol-- if defined($inputCol);
 my %criterion;
 
-open(FILE, "<:encoding(utf-8)","$filename") or die "can not open $filename";
-my $nb = 0;
-while (<FILE>) {
+if ($optValues) {
+    my @values=split(':', $filename);
+    foreach my $v (@values) {
+	$criterion{$v} = 1;
+    }
+} else {
+    open(FILE, "<:encoding(utf-8)","$filename") or die "can not open $filename";
+    my $nb = 0;
+    while (<FILE>) {
 	chomp;
 	my @columns = split('\t');
 #	print STDERR "DEBUG: $columns[0]\n$columns[1]\n$columns[2]\n$columns[3]\n\n";
@@ -50,8 +62,9 @@ while (<FILE>) {
 	}
 	$criterion{$data} = 1;
 	$nb++;
+    }
+    close(FILE);
 }
-close(FILE);
 
 while (<STDIN>) {
 	chomp;
